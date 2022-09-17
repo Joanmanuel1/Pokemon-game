@@ -42,15 +42,9 @@ html {
 
 
 @media only screen and (min-width : 900px) {
-    .container {
-        background-color: rgb(234, 255, 210);
-        margin-left: 25%;
-        width: 50%;
-        border-radius: 25%;
-    }
 
     html {
-        background-image: url(https://applauss.com/wp-content/uploads/2017/11/pokemon-top-10-770x513.jpg);
+        background-image: url(@/assets/pokes.png);
         background-repeat: no-repeat;
         background-size: 100%;
     }
