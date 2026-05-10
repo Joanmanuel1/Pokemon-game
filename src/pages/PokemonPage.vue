@@ -29,6 +29,9 @@
       </div>
     </header>
 
+    <!-- Combo bar -->
+    <ComboBar :comboType="comboType" :comboCount="comboCount" :comboMultiplier="comboMultiplier" />
+
     <!-- Floating bonus +N points -->
     <Transition name="bonus">
       <div v-if="showBonus" class="bonus-pop">+{{ lastBonus + 1 }}</div>
@@ -113,13 +116,23 @@
 
     <StatsDashboard :show="showStats" @close="showStats = false" />
 
+    <EvolutionChallenge
+      :show="showEvolChallenge"
+      :pokemonName="evolPokemonName"
+      :options="evolOptions"
+      :correctId="evolCorrectId"
+      @skip="showEvolChallenge = false"
+      @done="onEvolDone"
+    />
+
     <GameOverScreen
-      :show="perdio"
+      :show="showGameOver"
       :score="score"
       :bestStreak="bestStreak"
       :level="level"
       :highScore="highScore"
       :isNewRecord="isNewRecord"
+      :failedPokemon="failedPokemon"
       @restart="doNewGame"
       @exit="exitGame"
     />
@@ -133,6 +146,9 @@ import { useSound } from '@/composables/useSound'
 import { useTimer } from '@/composables/useTimer'
 import { useStatistics } from '@/composables/useStatistics'
 import { useHaptics } from '@/composables/useHaptics'
+import { fetchPokemon } from '@/composables/usePokemonCache'
+import { useDailyMissions } from '@/composables/useDailyMissions'
+import { useAchievements } from '@/composables/useAchievements'
 
 import PokemonPicture from '@/components/PokemonPicture.vue'
 import PokemonOptions from '@/components/PokemonOptions.vue'
@@ -146,6 +162,8 @@ import GameTimer from '@/components/GameTimer.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LevelProgress from '@/components/LevelProgress.vue'
 import AchievementToast from '@/components/AchievementToast.vue'
+import ComboBar from '@/components/ComboBar.vue'
+import EvolutionChallenge from '@/components/EvolutionChallenge.vue'
 
 const props = defineProps({
   difficulty: { type: String, default: 'easy' },
@@ -159,6 +177,8 @@ const {
   message, isCorrect, perdio, isLoading,
   showPokedex, showStats, lastSelectedId,
   hintUsed, hintLetter, lastBonus,
+  comboType, comboCount, comboMultiplier,
+  evolutionsGuessed,
   loadPokemon, checkAnswer, newGame, nextPokemon,
   setDifficulty, setTimerMode, useHint,
 } = useGameState()
@@ -172,6 +192,51 @@ const confettiRef = ref(null)
 const scorePulse = ref(false)
 const showBonus = ref(false)
 const isNewRecord = ref(false)
+const showGameOver = ref(false)
+const failedPokemon = ref(null)
+
+// Evolution challenge
+const showEvolChallenge = ref(false)
+const evolPokemonName = ref('')
+const evolOptions = ref([])
+const evolCorrectId = ref(null)
+
+const { updateMission: _updateMission } = useDailyMissions()
+const { unlock } = useAchievements()
+
+async function tryShowEvolutionChallenge(poke) {
+  const nextId = poke.nextEvolutionId
+  if (!nextId) return
+
+  try {
+    const correct = await fetchPokemon(nextId)
+    // Pick 3 wrong options close in ID range
+    const range = 30
+    const wrongIds = []
+    while (wrongIds.length < 3) {
+      const offset = Math.floor(Math.random() * range * 2) - range
+      const cId = Math.max(1, Math.min(905, nextId + offset))
+      if (cId !== nextId && !wrongIds.includes(cId)) wrongIds.push(cId)
+    }
+    const wrongs = await Promise.all(wrongIds.map(id => fetchPokemon(id)))
+    const options = [correct, ...wrongs]
+      .map(p => ({ id: p.id, name: p.name, sprite: p.sprite }))
+      .sort(() => Math.random() - 0.5)
+
+    evolPokemonName.value = poke.name
+    evolOptions.value = options
+    evolCorrectId.value = nextId
+    showEvolChallenge.value = true
+  } catch (_) {}
+}
+
+function onEvolDone(wasCorrect) {
+  showEvolChallenge.value = false
+  if (wasCorrect) {
+    _updateMission('evolution', 1)
+    unlock('first_evolution')
+  }
+}
 
 function handleSelection(selectedId) {
   stopTimer()
@@ -193,11 +258,18 @@ function handleSelection(selectedId) {
     }
 
     if (pokemon.value.cryUrl) setTimeout(() => playPokemonCry(pokemon.value.cryUrl), 600)
+
+    // Show evolution challenge after a short delay
+    const capturedPoke = pokemon.value
+    setTimeout(() => tryShowEvolutionChallenge(capturedPoke), 1200)
   } else {
     playWrong()
     haptics.error()
     recordWrong()
     isNewRecord.value = score.value > 0 && score.value === highScore.value && score.value > prevHigh
+    failedPokemon.value = pokemon.value
+    // Delay para que el usuario vea la respuesta correcta antes del modal
+    setTimeout(() => { showGameOver.value = true }, 2200)
   }
 }
 
@@ -214,6 +286,8 @@ function onSoundToggle() {
 function doNewGame() {
   recordGame(score.value, level.value)
   isNewRecord.value = false
+  showGameOver.value = false
+  failedPokemon.value = null
   newGame(props.difficulty)
   if (props.timerMode) startTimer(handleTimeout)
 }

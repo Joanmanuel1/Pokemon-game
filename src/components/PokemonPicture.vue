@@ -36,7 +36,7 @@ const flashing = ref(false)
 
 const fallbackSrc = computed(() =>
   props.pokemon
-    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${props.pokemon.id}.svg`
+    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${props.pokemon.id}.png`
     : ''
 )
 

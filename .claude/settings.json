@@ -7,7 +7,9 @@
       "Bash(npx vue-cli-service *)",
       "Bash(npm run *)",
       "Bash(kill %1)",
-      "Bash(pkill -f vue-cli-service)"
+      "Bash(pkill -f vue-cli-service)",
+      "Bash(grep -E \"error|ERROR|DONE|warning  $\")",
+      "Bash(grep -E \"ERROR|error TS|DONE|warning  $\")"
     ]
   }
 }

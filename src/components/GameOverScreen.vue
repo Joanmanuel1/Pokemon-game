@@ -5,6 +5,22 @@
         <div class="trophy-icon">{{ isNewRecord ? '🏆' : '💔' }}</div>
         <h2 class="gameover-title">{{ isNewRecord ? '¡Nuevo récord!' : 'Game Over' }}</h2>
 
+        <!-- Pokémon que el usuario falló -->
+        <div v-if="failedPokemon" class="failed-pokemon">
+          <img
+            :src="failedPokemon.sprite"
+            :alt="failedPokemon.name"
+            class="failed-sprite"
+          />
+          <div class="failed-info">
+            <span class="failed-label">Era</span>
+            <span class="failed-name">{{ capitalize(failedPokemon.name) }}</span>
+            <div class="failed-types">
+              <PokemonTypeBadge v-for="t in failedPokemon.types" :key="t" :type="t" />
+            </div>
+          </div>
+        </div>
+
         <div class="result-grid">
           <div class="result-cell">
             <span class="result-val">{{ score }}</span>
@@ -38,16 +54,23 @@
 </template>
 
 <script setup>
+import PokemonTypeBadge from './PokemonTypeBadge.vue'
+
 defineProps({
-  show:       { type: Boolean, default: false },
-  score:      { type: Number, default: 0 },
-  bestStreak: { type: Number, default: 0 },
-  level:      { type: Number, default: 1 },
-  highScore:  { type: Number, default: 0 },
-  isNewRecord:{ type: Boolean, default: false },
+  show:          { type: Boolean, default: false },
+  score:         { type: Number,  default: 0 },
+  bestStreak:    { type: Number,  default: 0 },
+  level:         { type: Number,  default: 1 },
+  highScore:     { type: Number,  default: 0 },
+  isNewRecord:   { type: Boolean, default: false },
+  failedPokemon: { type: Object,  default: null },
 })
 
 defineEmits(['restart', 'exit'])
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
 </script>
 
 <style scoped>
@@ -67,52 +90,106 @@ defineEmits(['restart', 'exit'])
   background: var(--bg-card-solid);
   color: var(--text-primary);
   border-radius: 24px;
-  padding: 32px 28px;
+  padding: 28px 24px;
   max-width: 380px;
   width: 100%;
   text-align: center;
   box-shadow: 0 25px 50px rgba(0,0,0,0.4);
   border: 1px solid var(--border-color);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .trophy-icon {
-  font-size: 56px;
-  margin-bottom: 8px;
+  font-size: 52px;
   animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  line-height: 1;
 }
 
 .gameover-title {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
-  margin: 0 0 20px 0;
+  margin: 0;
 }
 
+/* Pokémon fallado */
+.failed-pokemon {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(244, 67, 54, 0.08);
+  border: 1.5px solid rgba(244, 67, 54, 0.3);
+  border-radius: 16px;
+  padding: 12px 16px;
+  text-align: left;
+  animation: slideUp 0.4s ease both;
+}
+
+.failed-sprite {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));
+}
+
+.failed-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.failed-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.failed-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.failed-types {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Stats */
 .result-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: 8px;
 }
 
 .result-cell {
   background: var(--bg-primary);
-  border-radius: 14px;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 12px 8px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  align-items: center;
 }
 
 .result-val {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--text-primary);
 }
 
 .result-label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -120,7 +197,7 @@ defineEmits(['restart', 'exit'])
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-primary {
@@ -142,7 +219,7 @@ defineEmits(['restart', 'exit'])
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
   border-radius: 14px;
-  padding: 12px;
+  padding: 11px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -150,11 +227,12 @@ defineEmits(['restart', 'exit'])
 .btn-ghost:hover { background: var(--bg-primary); }
 
 .gameover-enter-active, .gameover-leave-active { transition: opacity 0.3s; }
-.gameover-enter-active .gameover-card, .gameover-leave-active .gameover-card {
+.gameover-enter-active .gameover-card,
+.gameover-leave-active .gameover-card {
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.gameover-enter-from { opacity: 0; }
-.gameover-leave-to   { opacity: 0; }
-.gameover-enter-from .gameover-card { transform: scale(0.7); }
+.gameover-enter-from             { opacity: 0; }
+.gameover-leave-to               { opacity: 0; }
+.gameover-enter-from .gameover-card { transform: scale(0.75); }
 .gameover-leave-to   .gameover-card { transform: scale(0.9); }
 </style>

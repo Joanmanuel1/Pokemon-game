@@ -10,9 +10,18 @@
           <span>🏆</span>
           <span>Récord: <strong>{{ highScore }}</strong></span>
         </div>
-        <div class="badge-pill" v-if="totalGames > 0">
-          <span>🎮</span>
-          <span>Partidas: <strong>{{ totalGames }}</strong></span>
+        <div class="badge-pill coins-pill">
+          <span>🪙</span>
+          <span><strong>{{ coins }}</strong></span>
+        </div>
+        <div class="badge-pill pokedex-pill" @click="$emit('pokedex')">
+          <span>📖</span>
+          <span>Pokédex <strong>{{ totalCaptured }}/905</strong></span>
+        </div>
+        <div class="badge-pill missions-pill" @click="showMissions = true">
+          <span>📅</span>
+          <span>Misiones</span>
+          <span v-if="hasPendingRewards" class="missions-badge">!</span>
         </div>
       </div>
 
@@ -46,6 +55,8 @@
         <ThemeToggle />
       </div>
     </div>
+
+    <DailyMissions :show="showMissions" @close="showMissions = false" />
   </div>
 </template>
 
@@ -53,13 +64,19 @@
 import { ref, computed } from 'vue'
 import { useLocalStorage } from '@/composables/useLocalStorage'
 import { useStatistics } from '@/composables/useStatistics'
+import { usePokedex } from '@/composables/usePokedex'
+import { useDailyMissions } from '@/composables/useDailyMissions'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import DailyMissions from '@/components/DailyMissions.vue'
 
-const emit = defineEmits(['start'])
+const emit = defineEmits(['start', 'pokedex'])
 
 const highScore = useLocalStorage('pkq_highScore', 0)
 const { stats } = useStatistics()
 const totalGames = computed(() => stats.value.totalGames)
+const { totalCaptured } = usePokedex()
+const { coins, hasPendingRewards } = useDailyMissions()
+const showMissions = ref(false)
 
 const selectedDiff = ref('easy')
 const timerEnabled = ref(false)
@@ -129,6 +146,45 @@ function start() {
   border-radius: 20px;
   font-size: 13px;
   color: var(--text-primary);
+}
+
+.pokedex-pill {
+  cursor: pointer;
+  border-color: #ef4444;
+  transition: all 0.2s;
+}
+.pokedex-pill:hover {
+  background: rgba(239, 68, 68, 0.08);
+  transform: scale(1.05);
+}
+
+.coins-pill { border-color: #f59e0b; }
+
+.missions-pill {
+  cursor: pointer;
+  border-color: #8b5cf6;
+  transition: all 0.2s;
+  position: relative;
+}
+.missions-pill:hover {
+  background: rgba(139, 92, 246, 0.08);
+  transform: scale(1.05);
+}
+
+.missions-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .select-title {
