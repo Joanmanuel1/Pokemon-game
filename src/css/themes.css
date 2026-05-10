@@ -1,0 +1,35 @@
+:root {
+  --bg-primary:    #f5f5f5;
+  --bg-card:       rgba(255, 255, 255, 0.85);
+  --bg-card-solid: #ffffff;
+  --text-primary:  #1e293b;
+  --text-secondary:#64748b;
+  --border-color:  rgba(0, 0, 0, 0.08);
+  --btn-correct:   #4caf50;
+  --btn-wrong:     #f44336;
+  --sk-base:       #e2e8f0;
+  --sk-shine:      #f8fafc;
+
+  --bg-grad-start: #fce7f3;
+  --bg-grad-end:   #dbeafe;
+  --bg-accent-1:   rgba(244, 114, 182, 0.45);
+  --bg-accent-2:   rgba(96, 165, 250, 0.45);
+}
+
+[data-theme="dark"] {
+  --bg-primary:    #0f172a;
+  --bg-card:       rgba(30, 41, 59, 0.75);
+  --bg-card-solid: #1e293b;
+  --text-primary:  #f1f5f9;
+  --text-secondary:#94a3b8;
+  --border-color:  rgba(255, 255, 255, 0.08);
+  --btn-correct:   #22c55e;
+  --btn-wrong:     #ef4444;
+  --sk-base:       #334155;
+  --sk-shine:      #475569;
+
+  --bg-grad-start: #1e1b4b;
+  --bg-grad-end:   #0f172a;
+  --bg-accent-1:   rgba(168, 85, 247, 0.35);
+  --bg-accent-2:   rgba(56, 189, 248, 0.3);
+}

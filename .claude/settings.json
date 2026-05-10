@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(html|js|css|json|vue|png|jpg|jpeg|gif|svg|mp3|wav|ogg\\)$\")",
+      "Bash(npm install *)",
+      "Bash(npm cache *)",
+      "Bash(npx vue-cli-service *)",
+      "Bash(npm run *)",
+      "Bash(kill %1)",
+      "Bash(pkill -f vue-cli-service)"
+    ]
+  }
+}
